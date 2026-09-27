@@ -121,3 +121,10 @@ Cloudformation-Validator/
 ├── invalid-sample.json  # Test file for JSON validation errors
 └── README.md            # GitHub documentation
 ```
+
+---
+
+## 👨‍💻 Author & Credits
+
+Developed by **Santhosh P** | **Glacine AI**
+

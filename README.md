@@ -5,26 +5,6 @@
 A professional, static developer utility web application designed for cloud engineers and DevOps practitioners. It reproduces local CloudFormation schema validation logic client-side, eliminating security risks by processing everything inside your browser without uploading code or requiring AWS API credentials.
 
 ---
-
-## 🚀 Live Demo & GitHub Pages Setup
-
-This project is built using 100% standard static web technologies (`HTML5`, `CSS3`, `Vanilla JavaScript`, `js-yaml`) and can be hosted directly via **GitHub Pages**.
-
-### Deploying to GitHub Pages
-
-1. Push your repository to GitHub:
-   ```bash
-   git add .
-   git commit -m "Deploy CloudFormation Validator"
-   git push origin main
-   ```
-2. On GitHub, navigate to **Settings** > **Pages**.
-3. Under **Build and deployment** > **Source**, select **Deploy from a branch**.
-4. Set the branch to `main` and folder to `/ (root)`.
-5. Click **Save**. Your site will be live at `https://<your-username>.github.io/Cloudformation-Validator/`.
-
----
-
 ## 📖 How To Use
 
 ### Option A: Upload a Template File

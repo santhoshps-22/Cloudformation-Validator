@@ -640,6 +640,16 @@ input:checked + .slider:before {
   color: #7f1d1d;
 }
 
+.error-suggestion {
+  font-size: 0.8125rem;
+  background: #ffffff;
+  border-left: 3px solid var(--aws-orange);
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: #1e293b;
+  margin: 4px 0;
+}
+
 .error-meta {
   display: flex;
   gap: 16px;

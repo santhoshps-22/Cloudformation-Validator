@@ -539,7 +539,8 @@ function validateAttributes(templateObj, parsedResources) {
           resource: res.logicalId,
           resourceType: res.rawType,
           property: attr,
-          message: `Not Allow Attribute: ${attr}`
+          message: `Not Allow Attribute: ${attr}`,
+          suggestion: `Remove the '${attr}' attribute from '${res.logicalId}'. This property is prohibited under governance rules or invalid for ${res.rawType}.`
         });
       }
     });
@@ -553,7 +554,8 @@ function validateAttributes(templateObj, parsedResources) {
           resource: res.logicalId,
           resourceType: res.rawType,
           property: attr,
-          message: `Not Reference Attribute: ${attr}`
+          message: `Not Reference Attribute: ${attr}`,
+          suggestion: `Add the missing reference property '${attr}' under Properties for '${res.logicalId}' (e.g. ${attr}: !Ref YourResource).`
         });
       }
     });
@@ -628,7 +630,8 @@ function runValidationWorkflow() {
       resource: "Root",
       resourceType: "Template",
       property: "RootKeys",
-      message: rootRes.message
+      message: rootRes.message,
+      suggestion: `Remove unknown root key(s) or move them under valid CloudFormation sections such as 'Metadata' or 'Parameters'. Allowed root sections are: ${validationConfig.allowedRootKeys.join(', ')}.`
     });
   }
 
@@ -645,7 +648,8 @@ function runValidationWorkflow() {
       resource: "Parameters",
       resourceType: "AWS::Parameter",
       property: "Name",
-      message: paramRes.message
+      message: paramRes.message,
+      suggestion: `Rename parameter(s) to follow authorized naming standards (e.g., suffixed with 'Cidr', 'Id', 'Name', 'Type', 'Environment') or configure them in allowedParameters.`
     });
   }
 
@@ -665,7 +669,8 @@ function runValidationWorkflow() {
           resource: r.logicalId,
           resourceType: r.rawType,
           property: "Type",
-          message: `Resource type '${r.rawType}' is not included in the allowed resources configuration.`
+          message: `Resource type '${r.rawType}' is not included in the allowed resources configuration.`,
+          suggestion: `Ensure the resource type uses standard AWS notation (e.g., 'AWS::EC2::Instance', 'AWS::S3::Bucket') and belongs to an allowed service provider.`
         });
       });
     }
@@ -741,6 +746,7 @@ function renderErrorItems(errors) {
         <span>${err.resource !== 'N/A' ? 'Resource: ' + err.resource : ''}</span>
       </div>
       <div class="error-msg">${err.message}</div>
+      ${err.suggestion ? `<div class="error-suggestion">💡 <strong>How to Fix / Improve:</strong> ${err.suggestion}</div>` : ''}
       <div class="error-meta">
         <span>Resource Type: ${err.resourceType}</span>
         <span>Property: ${err.property}</span>

@@ -381,7 +381,11 @@ function parseTemplate(rawText) {
       data = JSON.parse(text);
       return { success: true, format: 'JSON', data: data };
     } catch (err) {
-      return { success: false, error: "Invalid JSON syntax: " + err.message };
+      return { 
+        success: false, 
+        error: "Invalid JSON syntax: " + err.message,
+        suggestion: "Ensure valid JSON formatting with matching quotes, braces, and commas without trailing commas."
+      };
     }
   }
 
@@ -398,7 +402,58 @@ function parseTemplate(rawText) {
       data = JSON.parse(text);
       return { success: true, format: 'JSON', data: data };
     } catch (e2) {
-      return { success: false, error: "Invalid YAML/JSON syntax: " + err.message };
+      let errorMsg = "Invalid YAML/JSON syntax: " + err.reason || err.message;
+      let suggestion = "Check line indentation, colon spacing, and tag casing in your YAML file.";
+
+      // Extract line/column context if available from js-yaml mark
+      if (err.mark && typeof err.mark.line === 'number') {
+        const lineNo = err.mark.line + 1; // 1-indexed
+        const colNo = err.mark.column + 1;
+        errorMsg = `Invalid YAML/JSON syntax: ${err.reason || err.message} (Line ${lineNo}, Column ${colNo})`;
+
+        // Build code snippet preview around error line
+        const lines = text.split('\n');
+        const startLine = Math.max(0, err.mark.line - 2);
+        const endLine = Math.min(lines.length - 1, err.mark.line + 2);
+        let snippetLines = [];
+
+        for (let i = startLine; i <= endLine; i++) {
+          const numStr = (i + 1).toString().padStart(4, ' ');
+          const isErrorLine = i === err.mark.line;
+          const lineText = lines[i];
+          snippetLines.push(`${numStr} | ${lineText}`);
+          if (isErrorLine) {
+            const pointerPadding = ' '.repeat(7 + err.mark.column);
+            snippetLines.push(`${pointerPadding}^ (Error here)`);
+          }
+        }
+        errorMsg += "\n\n" + snippetLines.join('\n');
+      }
+
+      // Check specific error types for tailored suggestions
+      if (err.reason && err.reason.includes('unknown tag')) {
+        const tagMatch = err.reason.match(/unknown tag (!\w+)/i) || err.message.match(/unknown tag (!\w+)/i);
+        const tagUsed = tagMatch ? tagMatch[1] : "!tag";
+        
+        // Check case sensitivity issue like !ref vs !Ref
+        if (tagUsed.toLowerCase() === '!ref' && tagUsed !== '!Ref') {
+          suggestion = `CloudFormation short tags are case-sensitive. Replace lower-case '${tagUsed}' with capitalised '!Ref'. Example: VpcId: !Ref MyVPC`;
+        } else if (tagUsed.toLowerCase() === '!sub' && tagUsed !== '!Sub') {
+          suggestion = `CloudFormation short tags are case-sensitive. Replace '${tagUsed}' with '!Sub'.`;
+        } else if (tagUsed.toLowerCase() === '!getatt' && tagUsed !== '!GetAtt') {
+          suggestion = `CloudFormation short tags are case-sensitive. Replace '${tagUsed}' with '!GetAtt'.`;
+        } else {
+          suggestion = `Unknown CloudFormation tag '${tagUsed}'. Ensure intrinsic functions use correct casing (e.g. !Ref, !Sub, !GetAtt, !Select, !Join, !FindInMap, !ImportValue, !Base64, !If, !Equals, !And, !Or, !Not, !Condition).`;
+        }
+      } else if (err.reason && err.reason.includes('bad indentation')) {
+        suggestion = "Fix YAML indentation. Use spaces (not tabs) and ensure sibling keys align at the exact same indentation level.";
+      }
+
+      return { 
+        success: false, 
+        error: errorMsg,
+        suggestion: suggestion
+      };
     }
   }
 }
@@ -606,7 +661,8 @@ function runValidationWorkflow() {
       resource: "N/A",
       resourceType: "N/A",
       property: "Syntax",
-      message: parseRes.error
+      message: parseRes.error,
+      suggestion: parseRes.suggestion || "Check syntax formatting, quotes, and tags."
     }]);
     resultsSection.classList.remove('hidden');
     resultsSection.scrollIntoView({ behavior: 'smooth' });

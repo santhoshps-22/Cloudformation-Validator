@@ -84,6 +84,7 @@ Root Key Validation    Parameter Validation   Resource Validation
 The repository includes sample invalid templates for testing error handling:
 - `invalid-sample.yaml`
 - `invalid-sample.json`
+- `ec2-instance.yaml - Correct Template`
 
 Uploading these will demonstrate diagnostic error output for root tag errors, invalid parameters, unsupported resource types, and forbidden attributes.
 

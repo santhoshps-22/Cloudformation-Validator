@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Invalid CloudFormation Template Sample for Testing
+
+# 1. Invalid Root Key (Unrecognized section)
+InvalidRootSection:
+  Key: Value
+
+Parameters:
+  # 2. Invalid Parameter Name (Flagged by allowed parameters rule)
+  UnapprovedParamX:
+    Type: String
+    Default: test-value
+
+Resources:
+  # Valid VPC Resource
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      # 3. Forbidden / Not-Allowed Attribute (Triggers "Not Allow Attribute" error)
+      PublicIp: 1.2.3.4
+
+  # 4. Invalid / Disallowed Resource Type (Unrecognized service prefix)
+  MyCustomDatabase:
+    Type: AWS::UnsupportedService::Database
+    Properties:
+      Engine: mysql

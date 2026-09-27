@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Validate AWS CloudFormation templates (JSON/YAML) before deployment locally in your browser.">
+  <title>CloudFormation Template Validator</title>
+  <!-- Google Fonts for Modern Developer Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <!-- js-yaml for YAML Parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z" fill="currentColor"/>
+            <path d="M11 10h2v4h-2zM12 17l-3-3h6l-3 3z" fill="currentColor" transform="rotate(180 12 15)"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="title">CloudFormation Template Validator</h1>
+          <p class="subtitle">Validate AWS CloudFormation templates before deployment</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="badge badge-static">Static Frontend Validator</span>
+      </div>
+    </header>
+
+    <!-- Main Grid Workspace -->
+    <main class="workspace-grid">
+      <!-- Left Column: Input & Editor -->
+      <section class="card editor-card">
+        <div class="card-header">
+          <div class="tab-buttons">
+            <button id="tabUploadBtn" class="tab-btn active">Upload File</button>
+            <button id="tabPasteBtn" class="tab-btn">Paste Template</button>
+          </div>
+          <div class="format-indicator" id="formatIndicator">
+            <span class="label">Format:</span>
+            <span class="value" id="detectedFormatBadge">AUTO</span>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Upload Tab Content -->
+          <div id="uploadTabContent" class="tab-content active">
+            <div id="dropZone" class="drop-zone">
+              <div class="drop-zone-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 16v-8m0 0l-3 3m3-3l3 3M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                </svg>
+              </div>
+              <h3 class="drop-title">Upload CloudFormation Template</h3>
+              <p class="drop-subtitle">Drag & Drop your file here or</p>
+              <label for="templateFile" class="btn btn-secondary browse-btn">Browse Files</label>
+              <input type="file" id="templateFile" accept=".json,.yaml,.yml" class="hidden-file-input">
+              <p class="supported-formats">Supported: JSON • YAML • YML</p>
+            </div>
+
+            <!-- Uploaded File Info Card -->
+            <div id="fileInfoCard" class="file-info-card hidden">
+              <div class="file-info-header">
+                <span class="file-icon">✓</span>
+                <span id="fileName" class="file-name">template.yaml</span>
+              </div>
+              <div class="file-details">
+                <span>Type: <strong id="fileType">YAML</strong></span>
+                <span>Size: <strong id="fileSize">0 KB</strong></span>
+              </div>
+              <div class="file-actions">
+                <label for="templateFile" class="btn btn-sm btn-outline">Replace File</label>
+                <button id="removeFileBtn" class="btn btn-sm btn-danger-outline">Remove</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paste Tab Content -->
+          <div id="pasteTabContent" class="tab-content">
+            <div class="paste-toolbar">
+              <div class="radio-group">
+                <span class="toolbar-label">Format:</span>
+                <label><input type="radio" name="pasteFormat" value="json"> JSON</label>
+                <label><input type="radio" name="pasteFormat" value="yaml" checked> YAML</label>
+              </div>
+              <div class="toolbar-buttons">
+                <button id="formatJsonBtn" class="btn btn-sm btn-outline">Format JSON</button>
+                <button id="loadExampleBtn" class="btn btn-sm btn-outline">Load Example</button>
+                <button id="clearEditorBtn" class="btn btn-sm btn-outline">Clear</button>
+              </div>
+            </div>
+            <textarea id="templateEditor" class="code-textarea" placeholder="Paste your CloudFormation JSON or YAML template code here..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Settings, Control & Live Summary -->
+      <section class="sidebar-column">
+        <!-- Configuration Panel -->
+        <div class="card config-card">
+          <div class="card-header">
+            <h2>Validation Configuration</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="regionSelect">AWS Region</label>
+              <select id="regionSelect" class="form-select">
+                <option value="us-east-1" selected>us-east-1 (N. Virginia)</option>
+                <option value="us-east-2">us-east-2 (Ohio)</option>
+                <option value="us-west-1">us-west-1 (N. California)</option>
+                <option value="us-west-2">us-west-2 (Oregon)</option>
+                <option value="eu-west-1">eu-west-1 (Ireland)</option>
+                <option value="eu-central-1">eu-central-1 (Frankfurt)</option>
+                <option value="ap-south-1">ap-south-1 (Mumbai)</option>
+                <option value="ap-southeast-1">ap-southeast-1 (Singapore)</option>
+                <option value="ap-southeast-2">ap-southeast-2 (Sydney)</option>
+              </select>
+              <span class="form-hint">Corresponds to python --region parameter</span>
+            </div>
+
+            <div class="form-group toggle-group">
+              <div class="toggle-label-wrap">
+                <label for="allowCapToggle" class="toggle-title">Allow Capabilities</label>
+                <span class="form-hint">When disabled, templates requiring IAM capabilities require extra AWS config.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="allowCapToggle">
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <button id="validateBtn" class="btn btn-primary btn-block">
+              Validate Template
+            </button>
+          </div>
+        </div>
+
+        <!-- Progress Tracker Card -->
+        <div class="card progress-card">
+          <div class="card-header">
+            <h2>Validation Workflow</h2>
+          </div>
+          <div class="card-body">
+            <ul class="progress-list" id="progressTracker">
+              <li data-step="parse"><span class="step-icon">○</span> Parsing Template</li>
+              <li data-step="root"><span class="step-icon">○</span> Checking Root Keys</li>
+              <li data-step="params"><span class="step-icon">○</span> Checking Parameters</li>
+              <li data-step="resources"><span class="step-icon">○</span> Checking Resources</li>
+              <li data-step="attributes"><span class="step-icon">○</span> Checking Resource Attributes</li>
+              <li data-step="aws" class="dimmed"><span class="step-icon">⚠</span> AWS API Validation (Backend Required)</li>
+              <li data-step="exist" class="dimmed"><span class="step-icon">⚠</span> Resource Existence (Backend Required)</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Results Dashboard Section -->
+    <section id="resultsSection" class="results-section hidden">
+      <!-- Validation Result Banner -->
+      <div id="resultBanner" class="result-banner banner-success">
+        <div class="banner-icon" id="bannerIcon">✓</div>
+        <div class="banner-details">
+          <h2 id="bannerTitle">LOCAL VALIDATION PASSED</h2>
+          <p id="bannerSubtitle">Template syntax, root keys, parameters, resources, and attributes met validation rules.</p>
+        </div>
+      </div>
+
+      <!-- Overview Cards Grid -->
+      <div class="dashboard-grid">
+        <!-- Local Validation Dashboard -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Local Validation Engine</h2>
+            <span class="badge badge-success">Client-side</span>
+          </div>
+          <div class="card-body">
+            <div class="status-table" id="localStatusTable">
+              <div class="status-row"><span class="status-label">Template Syntax</span><span class="status-val success" id="statusSyntax">Valid</span></div>
+              <div class="status-row"><span class="status-label">Root Keys</span><span class="status-val success" id="statusRootKeys">Valid</span></div>
+              <div class="status-row"><span class="status-label">Parameters</span><span class="status-val success" id="statusParameters">Valid</span></div>
+              <div class="status-row"><span class="status-label">Resources</span><span class="status-val success" id="statusResources">Valid</span></div>
+              <div class="status-row"><span class="status-label">Resource Attributes</span><span class="status-val success" id="statusAttributes">Valid</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AWS CloudFormation Validation Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>AWS CloudFormation API</h2>
+            <span class="badge badge-warning">Backend Required</span>
+          </div>
+          <div class="card-body">
+            <div class="status-box warning-box">
+              <span class="status-box-title">Status: Not Connected</span>
+              <p>The original Python validator calls <code>boto3.client('cloudformation').validate_template()</code>. This static web frontend operates entirely in your browser and does not possess AWS credentials.</p>
+            </div>
+            <button class="btn btn-secondary btn-block" disabled title="Backend integration required for AWS API calls">
+              Run AWS Validation (Disabled in Static Mode)
+            </button>
+          </div>
+        </div>
+
+        <!-- AWS Resource Existence Check Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Resource Existence Check</h2>
+            <span class="badge badge-warning">Backend Required</span>
+          </div>
+          <div class="card-body">
+            <div class="status-box warning-box">
+              <span class="status-box-title">Status: Not Connected</span>
+              <p>Checks for existing Security Groups, AMIs, Subnets, and VPCs require live AWS API calls with active credentials. Not executed in client-side static mode.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Errors & Warnings Panel -->
+      <div id="errorsContainer" class="card errors-card hidden">
+        <div class="card-header border-danger">
+          <h2>Validation Diagnostics & Errors</h2>
+        </div>
+        <div class="card-body" id="errorList">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Template Summary & Resource Table -->
+      <div class="card summary-card">
+        <div class="card-header">
+          <h2>Template Summary & Resource Inspection</h2>
+        </div>
+        <div class="card-body">
+          <div class="summary-metrics">
+            <div class="metric-box">
+              <span class="metric-val" id="summaryRootKeysCount">0</span>
+              <span class="metric-label">Root Keys</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-val" id="summaryParamsCount">0</span>
+              <span class="metric-label">Parameters</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-val" id="summaryResourcesCount">0</span>
+              <span class="metric-label">Resources</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-val" id="summaryOutputsCount">0</span>
+              <span class="metric-label">Outputs</span>
+            </div>
+          </div>
+
+          <h3 class="table-title">Declared Resources</h3>
+          <div class="table-wrapper">
+            <table class="resource-table">
+              <thead>
+                <tr>
+                  <th>Logical ID</th>
+                  <th>Resource Type</th>
+                  <th>Converted Key</th>
+                  <th>Validation Status</th>
+                </tr>
+              </thead>
+              <tbody id="resourceTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture & Educational Section -->
+    <section class="card arch-card">
+      <div class="card-header">
+        <h2>Architecture & Workflow Overview</h2>
+      </div>
+      <div class="card-body">
+        <div class="arch-diagram-grid">
+          <div class="arch-box">
+            <h3>Static Frontend Local Engine (Active)</h3>
+            <pre class="ascii-art">
+CloudFormation Template (.json / .yaml)
+           │
+     ┌─────┴─────┐
+  JSON.parse()  js-yaml
+     └─────┬─────┘
+           ▼
+     Template Object
+           │
+  Validation Engine (JS)
+  ├── validateRootKeys()
+  ├── validateParameters()
+  ├── validateResources()
+  └── validateAttributes()
+           │
+           ▼
+     Local Results
+            </pre>
+          </div>
+
+          <div class="arch-box">
+            <h3>AWS API Backend Integration (Requires Backend)</h3>
+            <pre class="ascii-art">
+Browser Frontend
+       │
+       ▼ (Secure Endpoint)
+Backend Server / Lambda
+       │
+       ▼ (IAM Role / credentials)
+boto3.client('cloudformation')
+  .validate_template()
+       │
+       ▼
+CloudFormation API & Resource Check
+            </pre>
+          </div>
+        </div>
+        <p class="arch-note">
+          <strong>Security Notice:</strong> This web app performs 100% of its parsing and schema checks locally in your web browser. No templates are uploaded to external servers, and AWS access keys are never requested or stored.
+        </p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>CloudFormation Template Validator — Professional Static Cloud Engineering Tool | Client-Side Engine</p>
+    </footer>
+  </div>
+
+  <!-- Main JavaScript App -->
+  <script src="script.js"></script>
+</body>
+</html>

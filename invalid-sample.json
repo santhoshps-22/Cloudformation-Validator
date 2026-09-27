@@ -1,0 +1,28 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Invalid CloudFormation Template Sample JSON",
+  "UnknownRootKey": {
+    "Message": "This will trigger a Root Tag error"
+  },
+  "Parameters": {
+    "UnapprovedParamX": {
+      "Type": "String",
+      "Default": "invalid"
+    }
+  },
+  "Resources": {
+    "MyVPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "PublicIp": "192.168.1.1"
+      }
+    },
+    "BadResource": {
+      "Type": "AWS::FakeService::Server",
+      "Properties": {
+        "Size": "large"
+      }
+    }
+  }
+}

@@ -764,14 +764,162 @@ input:checked + .slider:before {
 /* Responsive Utilities */
 .hidden { display: none !important; }
 
+/* Responsive Media Queries */
 @media (max-width: 900px) {
+  body {
+    padding: 16px;
+  }
+
+  .app-container {
+    gap: 16px;
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
   .workspace-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
+
   .arch-diagram-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
+
+  .summary-metrics {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
+
+  .header-left {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    padding: 8px;
+  }
+
+  .title {
+    font-size: 1.15rem;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .card-body {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .tab-buttons {
+    width: 100%;
+  }
+
+  .tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 8px 10px;
+  }
+
+  .drop-zone {
+    padding: 24px 12px;
+  }
+
+  .drop-title {
+    font-size: 1rem;
+  }
+
+  .paste-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .radio-group {
+    justify-content: flex-start;
+  }
+
+  .toolbar-buttons {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .toolbar-buttons .btn {
+    flex: 1;
+    min-width: calc(50% - 6px);
+    text-align: center;
+  }
+
+  .code-textarea {
+    height: 300px;
+    font-size: 0.8125rem;
+    padding: 10px;
+  }
+
+  .file-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .file-actions .btn {
+    width: 100%;
+  }
+
   .summary-metrics {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .metric-val {
+    font-size: 1.25rem;
+  }
+
+  .result-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .banner-icon {
+    font-size: 1.5rem;
+  }
+
+  .banner-details h2 {
+    font-size: 1.1rem;
+  }
+
+  .error-header {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .error-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
 }
+
